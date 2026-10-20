@@ -14,7 +14,7 @@ public class Program
             options.SwaggerDoc("v1", new()
             {
                 Title = "InvestCase API",
-                Version = "v1.0.0",
+                Version = "v1.0.2",
                 Description = "API for the InvestCase platform."
             });
 
