@@ -1,7 +1,7 @@
-﻿using aspnet_backend.Models;
+﻿using InvestCase.Models;
 using Microsoft.AspNetCore.Mvc;
 
-namespace aspnet_backend.Controllers;
+namespace InvestCase.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]

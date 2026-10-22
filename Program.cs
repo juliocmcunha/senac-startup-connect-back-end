@@ -1,49 +1,77 @@
-﻿using System.Reflection;
-
-namespace aspnet_backend;
+using System.Reflection;
+using System.Text.Json.Serialization;
+using InvestCase.API.Data;
+using Microsoft.EntityFrameworkCore;
 
 public class Program
 {
     public static void Main(string[] args)
     {
-        WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
-        builder.Services.AddControllers();
+        var builder = WebApplication.CreateBuilder(args);
+
+        const string FrontendCorsPolicy = "Frontend";
+
+        var allowedOrigins =
+            builder.Configuration
+                .GetSection("Cors:AllowedOrigins")
+                .Get<string[]>()
+            ?? Array.Empty<string>();
+
+        builder.Services
+            .AddControllers()
+            .AddJsonOptions(options =>
+            {
+                options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+            });
+
         builder.Services.AddEndpointsApiExplorer();
+
         builder.Services.AddSwaggerGen(options =>
         {
             options.SwaggerDoc("v1", new()
             {
                 Title = "InvestCase API",
-                Version = "v1.0.2",
+                Version = "v1",
                 Description = "API for the InvestCase platform."
             });
 
-            string xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
-            string xmlPath = Path.Combine(
-                AppContext.BaseDirectory,
-                xmlFile
-            );
+            var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+            var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
 
-            options.IncludeXmlComments(xmlPath);
+            if (File.Exists(xmlPath))
+                options.IncludeXmlComments(xmlPath);
         });
 
-        WebApplication app = builder.Build();
-        if(!app.Environment.IsDevelopment())
+        var connectionString =
+            builder.Configuration.GetConnectionString("DefaultConnection")
+            ?? throw new InvalidOperationException(
+                "Connection string 'DefaultConnection' was not found.");
+
+        builder.Services.AddDbContext<AppDbContext>(options =>
+            options.UseNpgsql(connectionString));
+
+        builder.Services.AddCors(options =>
         {
-            app.UseExceptionHandler("/Home/Error");
-            app.UseHsts();
+            options.AddPolicy(FrontendCorsPolicy, policy =>
+            {
+                policy
+                    .WithOrigins(allowedOrigins)
+                    .AllowAnyHeader()
+                    .AllowAnyMethod();
+            });
+        });
+
+        var app = builder.Build();
+
+        if (app.Environment.IsDevelopment())
+        {
+            app.UseSwagger();
+            app.UseSwaggerUI();
         }
 
         app.UseHttpsRedirection();
-        app.UseRouting();
-        app.UseAuthorization();
-        app.UseSwagger();
-        app.UseSwaggerUI();
-
-        app.MapControllerRoute(
-            name: "default",
-            pattern: "{controller=Home}/{action=Index}/{id?}"
-        );
+        app.UseCors(FrontendCorsPolicy);
+        app.MapControllers();
 
         app.Run();
     }
