@@ -1,0 +1,183 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>aspnet-backend</name>
+    </assembly>
+    <members>
+        <member name="T:aspnet_backend.Controllers.EventsController">
+            <summary>
+            Provides endpoints for managing events.
+            </summary>
+        </member>
+        <member name="M:aspnet_backend.Controllers.EventsController.GetAll">
+            <summary>
+            Retrieves all events.
+            </summary>
+        </member>
+        <member name="M:aspnet_backend.Controllers.EventsController.GetById(System.Guid)">
+            <summary>
+            Retrieves an event by its unique identifier.
+            </summary>
+            <param name="id">The unique identifier of the event.</param>
+        </member>
+        <member name="M:aspnet_backend.Controllers.EventsController.Create(aspnet_backend.Models.Event)">
+            <summary>
+            Creates a new event.
+            </summary>
+            <param name="eventItem">The event to be created.</param>
+        </member>
+        <member name="M:aspnet_backend.Controllers.EventsController.Update(System.Guid,aspnet_backend.Models.Event)">
+            <summary>
+            Updates an existing event.
+            </summary>
+            <param name="id">The unique identifier of the event.</param>
+            <param name="eventItem">The updated event data.</param>
+        </member>
+        <member name="M:aspnet_backend.Controllers.EventsController.Delete(System.Guid)">
+            <summary>
+            Deletes an event.
+            </summary>
+            <param name="id">The unique identifier of the event.</param>
+        </member>
+        <member name="T:aspnet_backend.Controllers.FundingCallsController">
+            <summary>
+            Provides endpoints for managing funding calls.
+            </summary>
+        </member>
+        <member name="M:aspnet_backend.Controllers.FundingCallsController.GetAll">
+            <summary>
+            Retrieves all funding calls.
+            </summary>
+        </member>
+        <member name="M:aspnet_backend.Controllers.FundingCallsController.GetById(System.Guid)">
+            <summary>
+            Retrieves a funding call by its unique identifier.
+            </summary>
+            <param name="id">The unique identifier of the funding call.</param>
+        </member>
+        <member name="M:aspnet_backend.Controllers.FundingCallsController.Create(aspnet_backend.Models.FundingCall)">
+            <summary>
+            Creates a new funding call.
+            </summary>
+            <param name="fundingCall">The funding call to be created.</param>
+        </member>
+        <member name="M:aspnet_backend.Controllers.FundingCallsController.Update(System.Guid,aspnet_backend.Models.FundingCall)">
+            <summary>
+            Updates an existing funding call.
+            </summary>
+            <param name="id">The unique identifier of the funding call.</param>
+            <param name="fundingCall">The updated funding call data.</param>
+        </member>
+        <member name="M:aspnet_backend.Controllers.FundingCallsController.Delete(System.Guid)">
+            <summary>
+            Deletes a funding call.
+            </summary>
+            <param name="id">The unique identifier of the funding call.</param>
+        </member>
+        <member name="T:aspnet_backend.Controllers.InvestorController">
+            <summary>
+            Provides endpoints for managing investors.
+            </summary>
+        </member>
+        <member name="M:aspnet_backend.Controllers.InvestorController.GetAll">
+            <summary>
+            Retrieves all investors.
+            </summary>
+        </member>
+        <member name="M:aspnet_backend.Controllers.InvestorController.GetById(System.Guid)">
+            <summary>
+            Retrieves an investor by its unique identifier.
+            </summary>
+            <param name="id">The unique identifier of the investor.</param>
+        </member>
+        <member name="M:aspnet_backend.Controllers.InvestorController.Create(aspnet_backend.Models.Investor)">
+            <summary>
+            Creates a new investor.
+            </summary>
+            <param name="investor">The investor to be created.</param>
+        </member>
+        <member name="M:aspnet_backend.Controllers.InvestorController.Update(System.Guid,aspnet_backend.Models.Investor)">
+            <summary>
+            Updates an existing investor.
+            </summary>
+            <param name="id">The unique identifier of the investor.</param>
+            <param name="investor">The updated investor data.</param>
+        </member>
+        <member name="M:aspnet_backend.Controllers.InvestorController.Delete(System.Guid)">
+            <summary>
+            Deletes an investor.
+            </summary>
+            <param name="id">The unique identifier of the investor.</param>
+        </member>
+        <member name="T:aspnet_backend.Controllers.StartupsController">
+            <summary>
+            Provides endpoints for managing startups.
+            </summary>
+        </member>
+        <member name="M:aspnet_backend.Controllers.StartupsController.GetAll">
+            <summary>
+            Retrieves all startups.
+            </summary>
+        </member>
+        <member name="M:aspnet_backend.Controllers.StartupsController.GetById(System.Guid)">
+            <summary>
+            Retrieves a startup by its unique identifier.
+            </summary>
+            <param name="id">The unique identifier of the startup.</param>
+        </member>
+        <member name="M:aspnet_backend.Controllers.StartupsController.Create(aspnet_backend.Models.Startup)">
+            <summary>
+            Creates a new startup.
+            </summary>
+            <param name="startup">The startup to be created.</param>
+        </member>
+        <member name="M:aspnet_backend.Controllers.StartupsController.Update(System.Guid,aspnet_backend.Models.Startup)">
+            <summary>
+            Updates an existing startup.
+            </summary>
+            <param name="id">The unique identifier of the startup.</param>
+            <param name="startup">The updated startup data.</param>
+        </member>
+        <member name="M:aspnet_backend.Controllers.StartupsController.Delete(System.Guid)">
+            <summary>
+            Deletes a startup.
+            </summary>
+            <param name="id">The unique identifier of the startup.</param>
+        </member>
+        <member name="T:aspnet_backend.Controllers.UsersController">
+            <summary>
+            Provides endpoints for managing users.
+            </summary>
+        </member>
+        <member name="M:aspnet_backend.Controllers.UsersController.GetAll">
+            <summary>
+            Retrieves all users.
+            </summary>
+        </member>
+        <member name="M:aspnet_backend.Controllers.UsersController.GetById(System.Guid)">
+            <summary>
+            Retrieves a user by its unique identifier.
+            </summary>
+            <param name="id">The unique identifier of the user.</param>
+        </member>
+        <member name="M:aspnet_backend.Controllers.UsersController.Create(aspnet_backend.Models.User)">
+            <summary>
+            Creates a new user.
+            </summary>
+            <param name="user">The user to be created.</param>
+        </member>
+        <member name="M:aspnet_backend.Controllers.UsersController.Update(System.Guid,aspnet_backend.Models.User)">
+            <summary>
+            Updates an existing user.
+            </summary>
+            <param name="id">The unique identifier of the user.</param>
+            <param name="user">The updated user data.</param>
+        </member>
+        <member name="M:aspnet_backend.Controllers.UsersController.Delete(System.Guid)">
+            <summary>
+            Deletes a user.
+            </summary>
+            <param name="id">The unique identifier of the user.</param>
+        </member>
+    </members>
+</doc>
