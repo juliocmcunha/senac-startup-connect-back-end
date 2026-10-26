@@ -42,7 +42,7 @@ public class Program
                 options.IncludeXmlComments(xmlPath);
         });
 
-        var connectionString =
+        var connectionString =  
             builder.Configuration.GetConnectionString("DefaultConnection")
             ?? throw new InvalidOperationException(
                 "Connection string 'DefaultConnection' was not found.");
@@ -60,6 +60,11 @@ public class Program
                     .AllowAnyMethod();
             });
         });
+
+
+	builder.Services.AddEndpointsApiExplorer();
+    builder.Services.AddSwaggerGen();
+
 
         var app = builder.Build();
 
