@@ -5,114 +5,56 @@ using Microsoft.EntityFrameworkCore;
 
 namespace InvestCase.API.Controllers;
 
-/// <summary>
-/// Provides endpoints for managing funding calls.
-/// </summary>
+/// <summary>Provides funding call CRUD endpoints.</summary>
 [ApiController]
 [Route("api/[controller]")]
 public class FundingCallsController : ControllerBase
 {
     private readonly AppDbContext _context;
+    public FundingCallsController(AppDbContext context) => _context = context;
 
-    public FundingCallsController(AppDbContext context)
-    {
-        _context = context;
-    }
-
-    /// <summary>Retrieves all funding calls.</summary>
     [HttpGet]
     public async Task<ActionResult<IEnumerable<FundingCall>>> GetAll()
-    {
-        var fundingCalls = await _context.FundingCalls
-            .AsNoTracking()
-            .Include(fundingCall => fundingCall.CreatedByUser)
-            .ToListAsync();
+        => Ok(await _context.FundingCalls.AsNoTracking().OrderBy(x => x.DeadlineAt).ToListAsync());
 
-        return Ok(fundingCalls);
-    }
-
-    /// <summary>Retrieves a funding call by its unique identifier.</summary>
     [HttpGet("{id:guid}")]
     public async Task<ActionResult<FundingCall>> GetById(Guid id)
     {
-        var fundingCall = await _context.FundingCalls
-            .AsNoTracking()
-            .Include(item => item.CreatedByUser)
-            .FirstOrDefaultAsync(item => item.Id == id);
-
-        if (fundingCall is null)
-            return NotFound(new { message = "Funding call not found." });
-
-        return Ok(fundingCall);
+        var item = await _context.FundingCalls.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id);
+        return item is null ? NotFound(new { message = "Funding call not found." }) : Ok(item);
     }
 
-    /// <summary>Creates a new funding call.</summary>
     [HttpPost]
-    public async Task<ActionResult<FundingCall>> Create(FundingCall fundingCall)
+    public async Task<ActionResult<FundingCall>> Create(FundingCall item)
     {
-        var creatorExists = await _context.Users
-            .AnyAsync(user => user.Id == fundingCall.CreatedByUserId);
-
-        if (!creatorExists)
+        if (!await _context.Users.AnyAsync(x => x.Id == item.CreatedByUserId))
             return BadRequest(new { message = "The informed CreatedByUserId does not exist." });
-
-        if (fundingCall.PublishedAt == default)
-            fundingCall.PublishedAt = DateTime.UtcNow;
-
-        if (fundingCall.DeadlineAt.HasValue &&
-            fundingCall.DeadlineAt < fundingCall.PublishedAt)
-        {
-            return BadRequest(new { message = "DeadlineAt cannot be earlier than PublishedAt." });
-        }
-
-        fundingCall.Id = Guid.NewGuid();
-
-        _context.FundingCalls.Add(fundingCall);
+        item.Id = Guid.NewGuid();
+        if (item.PublishedAt == default) item.PublishedAt = DateTime.UtcNow;
+        _context.FundingCalls.Add(item);
         await _context.SaveChangesAsync();
-
-        return CreatedAtAction(nameof(GetById), new { id = fundingCall.Id }, fundingCall);
+        return CreatedAtAction(nameof(GetById), new { id = item.Id }, item);
     }
 
-    /// <summary>Updates an existing funding call.</summary>
     [HttpPut("{id:guid}")]
-    public async Task<IActionResult> Update(Guid id, FundingCall fundingCall)
+    public async Task<IActionResult> Update(Guid id, FundingCall input)
     {
-        var existingFundingCall = await _context.FundingCalls.FindAsync(id);
-
-        if (existingFundingCall is null)
-            return NotFound(new { message = "Funding call not found." });
-
-        if (fundingCall.DeadlineAt.HasValue &&
-            fundingCall.DeadlineAt < fundingCall.PublishedAt)
-        {
-            return BadRequest(new { message = "DeadlineAt cannot be earlier than PublishedAt." });
-        }
-
-        existingFundingCall.Title = fundingCall.Title;
-        existingFundingCall.Description = fundingCall.Description;
-        existingFundingCall.Industry = fundingCall.Industry;
-        existingFundingCall.TotalAmount = fundingCall.TotalAmount;
-        existingFundingCall.PublishedAt = fundingCall.PublishedAt;
-        existingFundingCall.DeadlineAt = fundingCall.DeadlineAt;
-        existingFundingCall.CallUrl = fundingCall.CallUrl;
-
+        var item = await _context.FundingCalls.FindAsync(id);
+        if (item is null) return NotFound(new { message = "Funding call not found." });
+        item.Title = input.Title; item.Description = input.Description; item.Industry = input.Industry;
+        item.TotalAmount = input.TotalAmount; item.PublishedAt = input.PublishedAt;
+        item.DeadlineAt = input.DeadlineAt; item.CallUrl = input.CallUrl;
         await _context.SaveChangesAsync();
-
         return NoContent();
     }
 
-    /// <summary>Deletes a funding call.</summary>
     [HttpDelete("{id:guid}")]
     public async Task<IActionResult> Delete(Guid id)
     {
-        var fundingCall = await _context.FundingCalls.FindAsync(id);
-
-        if (fundingCall is null)
-            return NotFound(new { message = "Funding call not found." });
-
-        _context.FundingCalls.Remove(fundingCall);
+        var item = await _context.FundingCalls.FindAsync(id);
+        if (item is null) return NotFound(new { message = "Funding call not found." });
+        _context.FundingCalls.Remove(item);
         await _context.SaveChangesAsync();
-
         return NoContent();
     }
 }

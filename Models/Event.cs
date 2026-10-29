@@ -11,6 +11,5 @@ public class Event
     public string? Type { get; set; }
     public string? RegistrationUrl { get; set; }
     public Guid CreatedByUserId { get; set; }
-
     public User CreatedByUser { get; set; } = null!;
 }

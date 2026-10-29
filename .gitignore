@@ -1,7 +1,19 @@
+bin/
+obj/
+.vs/
+
+*.user
+*.suo
+
+*.log
+
+appsettings.Local.json
+appsettings.Production.json
+
 .env
-.vs
+.env.local
 
-/bin/
-/obj/
+*.pfx
+*.key
 
-/FRONTEND-TESTING/
+TestResults/

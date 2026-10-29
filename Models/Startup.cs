@@ -8,10 +8,10 @@ public class Startup
     public string? Description { get; set; }
     public string? Stage { get; set; }
     public string? Industry { get; set; }
+    public string? InvestmentNeededRange { get; set; }
     public string? WebsiteUrl { get; set; }
     public string? Location { get; set; }
     public DateTime? FoundedAt { get; set; }
-
+    public int ProfileViews30Days { get; set; }
     public User User { get; set; } = null!;
-    public ICollection<Investor> Investors { get; set; } = new List<Investor>();
 }

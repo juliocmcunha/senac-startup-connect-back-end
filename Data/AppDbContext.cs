@@ -5,15 +5,15 @@ namespace InvestCase.API.Data;
 
 public class AppDbContext : DbContext
 {
-    public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
-    {
-    }
+    public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
     public DbSet<User> Users => Set<User>();
     public DbSet<Investor> Investors => Set<Investor>();
     public DbSet<Startup> Startups => Set<Startup>();
     public DbSet<Event> Events => Set<Event>();
     public DbSet<FundingCall> FundingCalls => Set<FundingCall>();
+    public DbSet<Interest> Interests => Set<Interest>();
+    public DbSet<Notification> Notifications => Set<Notification>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -22,132 +22,81 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<User>(entity =>
         {
             entity.ToTable("Users");
-            entity.HasKey(user => user.Id);
-
-            entity.Property(user => user.FullName)
-                .HasMaxLength(100)
-                .IsRequired();
-
-            entity.Property(user => user.Email)
-                .HasMaxLength(150)
-                .IsRequired();
-
-            entity.HasIndex(user => user.Email)
-                .IsUnique();
-
-            entity.Property(user => user.PasswordHash)
-                .HasMaxLength(255)
-                .IsRequired();
-
-            entity.Property(user => user.ProfilePictureUrl)
-                .HasMaxLength(500);
-
-            entity.Property(user => user.CreatedAt)
-                .IsRequired();
-
-            entity.Property(user => user.IsActive)
-                .IsRequired();
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.FullName).HasMaxLength(120).IsRequired();
+            entity.Property(x => x.Email).HasMaxLength(180).IsRequired();
+            entity.HasIndex(x => x.Email).IsUnique();
+            entity.Property(x => x.PasswordHash).HasMaxLength(255).IsRequired();
+            entity.Property(x => x.Role).HasMaxLength(20).IsRequired();
+            entity.Property(x => x.ProfilePictureUrl).HasMaxLength(500);
         });
 
         modelBuilder.Entity<Investor>(entity =>
         {
             entity.ToTable("Investors");
-            entity.HasKey(investor => investor.Id);
-
-            entity.Property(investor => investor.Company).HasMaxLength(100);
-            entity.Property(investor => investor.JobTitle).HasMaxLength(100);
-            entity.Property(investor => investor.InvestmentType).HasMaxLength(100);
-            entity.Property(investor => investor.LinkedInUrl).HasMaxLength(500);
-
-            entity.HasOne(investor => investor.User)
-                .WithOne(user => user.Investor)
-                .HasForeignKey<Investor>(investor => investor.UserId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            entity.HasIndex(investor => investor.UserId)
-                .IsUnique();
+            entity.HasKey(x => x.Id);
+            entity.HasIndex(x => x.UserId).IsUnique();
+            entity.Property(x => x.InvestorType).HasMaxLength(100);
+            entity.Property(x => x.InterestArea).HasMaxLength(120);
+            entity.Property(x => x.InvestmentRange).HasMaxLength(120);
+            entity.Property(x => x.Location).HasMaxLength(150);
+            entity.Property(x => x.LinkedInUrl).HasMaxLength(500);
+            entity.HasOne(x => x.User).WithOne(x => x.Investor).HasForeignKey<Investor>(x => x.UserId).OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<Startup>(entity =>
         {
             entity.ToTable("Startups");
-            entity.HasKey(startup => startup.Id);
-
-            entity.Property(startup => startup.Name)
-                .HasMaxLength(100)
-                .IsRequired();
-
-            entity.Property(startup => startup.Stage).HasMaxLength(50);
-            entity.Property(startup => startup.Industry).HasMaxLength(100);
-            entity.Property(startup => startup.WebsiteUrl).HasMaxLength(500);
-            entity.Property(startup => startup.Location).HasMaxLength(150);
-
-            entity.HasOne(startup => startup.User)
-                .WithOne(user => user.Startup)
-                .HasForeignKey<Startup>(startup => startup.UserId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            entity.HasIndex(startup => startup.UserId)
-                .IsUnique();
+            entity.HasKey(x => x.Id);
+            entity.HasIndex(x => x.UserId).IsUnique();
+            entity.Property(x => x.Name).HasMaxLength(120).IsRequired();
+            entity.Property(x => x.Stage).HasMaxLength(80);
+            entity.Property(x => x.Industry).HasMaxLength(120);
+            entity.Property(x => x.InvestmentNeededRange).HasMaxLength(120);
+            entity.Property(x => x.WebsiteUrl).HasMaxLength(500);
+            entity.Property(x => x.Location).HasMaxLength(150);
+            entity.HasOne(x => x.User).WithOne(x => x.Startup).HasForeignKey<Startup>(x => x.UserId).OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<Event>(entity =>
         {
             entity.ToTable("Events");
-            entity.HasKey(eventItem => eventItem.Id);
-
-            entity.Property(eventItem => eventItem.Title)
-                .HasMaxLength(150)
-                .IsRequired();
-
-            entity.Property(eventItem => eventItem.Location).HasMaxLength(150);
-            entity.Property(eventItem => eventItem.Type).HasMaxLength(100);
-            entity.Property(eventItem => eventItem.RegistrationUrl).HasMaxLength(500);
-
-            entity.HasOne(eventItem => eventItem.CreatedByUser)
-                .WithMany(user => user.CreatedEvents)
-                .HasForeignKey(eventItem => eventItem.CreatedByUserId)
-                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Title).HasMaxLength(180).IsRequired();
+            entity.Property(x => x.Location).HasMaxLength(150);
+            entity.Property(x => x.Type).HasMaxLength(100);
+            entity.Property(x => x.RegistrationUrl).HasMaxLength(500);
+            entity.HasOne(x => x.CreatedByUser).WithMany(x => x.CreatedEvents).HasForeignKey(x => x.CreatedByUserId).OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<FundingCall>(entity =>
         {
             entity.ToTable("FundingCalls");
-            entity.HasKey(fundingCall => fundingCall.Id);
-
-            entity.Property(fundingCall => fundingCall.Title)
-                .HasMaxLength(150)
-                .IsRequired();
-
-            entity.Property(fundingCall => fundingCall.Industry).HasMaxLength(100);
-            entity.Property(fundingCall => fundingCall.TotalAmount).HasPrecision(15, 2);
-            entity.Property(fundingCall => fundingCall.CallUrl).HasMaxLength(500);
-
-            entity.HasOne(fundingCall => fundingCall.CreatedByUser)
-                .WithMany(user => user.CreatedFundingCalls)
-                .HasForeignKey(fundingCall => fundingCall.CreatedByUserId)
-                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Title).HasMaxLength(180).IsRequired();
+            entity.Property(x => x.Industry).HasMaxLength(120);
+            entity.Property(x => x.TotalAmount).HasPrecision(15, 2);
+            entity.Property(x => x.CallUrl).HasMaxLength(500);
+            entity.HasOne(x => x.CreatedByUser).WithMany(x => x.CreatedFundingCalls).HasForeignKey(x => x.CreatedByUserId).OnDelete(DeleteBehavior.Cascade);
         });
 
-        modelBuilder.Entity<Investor>()
-            .HasMany(investor => investor.Startups)
-            .WithMany(startup => startup.Investors)
-            .UsingEntity<Dictionary<string, object>>(
-                "InvestorStartups",
-                right => right
-                    .HasOne<Startup>()
-                    .WithMany()
-                    .HasForeignKey("StartupId")
-                    .OnDelete(DeleteBehavior.Cascade),
-                left => left
-                    .HasOne<Investor>()
-                    .WithMany()
-                    .HasForeignKey("InvestorId")
-                    .OnDelete(DeleteBehavior.Cascade),
-                join =>
-                {
-                    join.ToTable("InvestorStartups");
-                    join.HasKey("InvestorId", "StartupId");
-                });
+        modelBuilder.Entity<Interest>(entity =>
+        {
+            entity.ToTable("Interests");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Status).HasMaxLength(40).IsRequired();
+            entity.HasIndex(x => new { x.FromUserId, x.ToUserId }).IsUnique();
+            entity.HasOne(x => x.FromUser).WithMany().HasForeignKey(x => x.FromUserId).OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(x => x.ToUser).WithMany().HasForeignKey(x => x.ToUserId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<Notification>(entity =>
+        {
+            entity.ToTable("Notifications");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Type).HasMaxLength(40).IsRequired();
+            entity.Property(x => x.Title).HasMaxLength(300).IsRequired();
+            entity.HasOne(x => x.User).WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Cascade);
+        });
     }
 }

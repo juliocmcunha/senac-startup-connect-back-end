@@ -11,6 +11,5 @@ public class FundingCall
     public DateTime? DeadlineAt { get; set; }
     public string? CallUrl { get; set; }
     public Guid CreatedByUserId { get; set; }
-
     public User CreatedByUser { get; set; } = null!;
 }
