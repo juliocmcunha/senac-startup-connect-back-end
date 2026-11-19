@@ -42,6 +42,14 @@ public class MatchesController : ControllerBase
             .Where(x => otherUserIds.Contains(x.Id))
             .ToDictionaryAsync(x => x.Id);
 
+        // Profile ids let the front-end open the investor/startup profile screen.
+        var investorProfiles = await _context.Investors.AsNoTracking()
+            .Where(x => otherUserIds.Contains(x.UserId))
+            .ToDictionaryAsync(x => x.UserId, x => x.Id);
+        var startupProfiles = await _context.Startups.AsNoTracking()
+            .Where(x => otherUserIds.Contains(x.UserId))
+            .ToDictionaryAsync(x => x.UserId, x => x.Id);
+
         var result = matches
             .GroupBy(x => x.FromUserId == userId ? x.ToUserId : x.FromUserId)
             .Select(group =>
@@ -52,6 +60,9 @@ public class MatchesController : ControllerBase
                 return new
                 {
                     userId = otherUserId,
+                    profileId = investorProfiles.TryGetValue(otherUserId, out var investorProfileId)
+                        ? investorProfileId
+                        : startupProfiles.TryGetValue(otherUserId, out var startupProfileId) ? startupProfileId : (Guid?)null,
                     displayName = otherUser?.FullName ?? "Unknown user",
                     role = otherUser?.Role,
                     initials = PresentationHelper.Initials(otherUser?.FullName ?? "IC"),
