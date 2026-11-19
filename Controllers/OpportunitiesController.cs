@@ -22,6 +22,9 @@ public class OpportunitiesController : ControllerBase
         var interests = await _context.Interests.AsNoTracking()
             .Where(x => x.FromUserId == userId || x.ToUserId == userId)
             .OrderByDescending(x => x.CreatedAt).ToListAsync();
+        // A match is stored as two interests (A->B and B->A); keep only the most recent one per counterpart.
+        interests = interests.GroupBy(x => x.FromUserId == userId ? x.ToUserId : x.FromUserId)
+            .Select(g => g.First()).ToList();
         var otherIds = interests.Select(x => x.FromUserId == userId ? x.ToUserId : x.FromUserId).Distinct().ToList();
         var startups = await _context.Startups.AsNoTracking().Where(x => otherIds.Contains(x.UserId)).ToDictionaryAsync(x => x.UserId);
 
@@ -51,6 +54,9 @@ public class OpportunitiesController : ControllerBase
         var interests = await _context.Interests.AsNoTracking()
             .Where(x => x.FromUserId == userId || x.ToUserId == userId)
             .OrderByDescending(x => x.CreatedAt).ToListAsync();
+        // A match is stored as two interests (A->B and B->A); keep only the most recent one per counterpart.
+        interests = interests.GroupBy(x => x.FromUserId == userId ? x.ToUserId : x.FromUserId)
+            .Select(g => g.First()).ToList();
         var otherIds = interests.Select(x => x.FromUserId == userId ? x.ToUserId : x.FromUserId).Distinct().ToList();
         var investors = await _context.Investors.AsNoTracking().Include(x => x.User)
             .Where(x => otherIds.Contains(x.UserId)).ToDictionaryAsync(x => x.UserId);

@@ -1,4 +1,6 @@
+using InvestCase.API.Contracts;
 using InvestCase.API.Data;
+using InvestCase.API.Helpers;
 using InvestCase.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -25,26 +27,36 @@ public class EventsController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<ActionResult<Event>> Create(Event item)
+    public async Task<ActionResult<Event>> Create(CreateEventRequest request)
     {
-        if (!await _context.Users.AnyAsync(x => x.Id == item.CreatedByUserId))
+        if (!await _context.Users.AnyAsync(x => x.Id == request.CreatedByUserId))
             return BadRequest(new { message = "The informed CreatedByUserId does not exist." });
-        if (item.EndsAt.HasValue && item.EndsAt < item.StartsAt)
+        if (request.EndsAt.HasValue && request.EndsAt < request.StartsAt)
             return BadRequest(new { message = "EndsAt cannot be earlier than StartsAt." });
-        item.Id = Guid.NewGuid();
+
+        var item = new Event
+        {
+            Id = Guid.NewGuid(), Title = request.Title.Trim(), Description = request.Description,
+            StartsAt = DateTimeHelper.ToUtc(request.StartsAt), EndsAt = DateTimeHelper.ToUtc(request.EndsAt),
+            Location = request.Location, Type = request.Type, RegistrationUrl = request.RegistrationUrl,
+            CreatedByUserId = request.CreatedByUserId
+        };
         _context.Events.Add(item);
         await _context.SaveChangesAsync();
         return CreatedAtAction(nameof(GetById), new { id = item.Id }, item);
     }
 
     [HttpPut("{id:guid}")]
-    public async Task<IActionResult> Update(Guid id, Event input)
+    public async Task<IActionResult> Update(Guid id, UpdateEventRequest input)
     {
         var item = await _context.Events.FindAsync(id);
         if (item is null) return NotFound(new { message = "Event not found." });
-        item.Title = input.Title; item.Description = input.Description; item.StartsAt = input.StartsAt;
-        item.EndsAt = input.EndsAt; item.Location = input.Location; item.Type = input.Type;
-        item.RegistrationUrl = input.RegistrationUrl;
+        if (input.EndsAt.HasValue && input.EndsAt < input.StartsAt)
+            return BadRequest(new { message = "EndsAt cannot be earlier than StartsAt." });
+
+        item.Title = input.Title.Trim(); item.Description = input.Description;
+        item.StartsAt = DateTimeHelper.ToUtc(input.StartsAt); item.EndsAt = DateTimeHelper.ToUtc(input.EndsAt);
+        item.Location = input.Location; item.Type = input.Type; item.RegistrationUrl = input.RegistrationUrl;
         await _context.SaveChangesAsync();
         return NoContent();
     }

@@ -35,10 +35,24 @@ public class HealthController : ControllerBase
             });
         }
 
+        // Connecting is not enough: the tables must exist. Pending migrations mean the schema is outdated.
+        var pendingMigrations = (await _context.Database.GetPendingMigrationsAsync()).ToList();
+        if (pendingMigrations.Count > 0)
+        {
+            return StatusCode(503, new
+            {
+                api = "online",
+                database = "online",
+                schema = "outdated",
+                pendingMigrations
+            });
+        }
+
         return Ok(new
         {
             api = "online",
             database = "online",
+            schema = "up to date",
             checkedAt = DateTime.UtcNow
         });
     }

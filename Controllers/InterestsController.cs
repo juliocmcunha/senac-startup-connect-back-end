@@ -28,6 +28,11 @@ public class InterestsController : ControllerBase
         if (fromUser is null || toUser is null)
             return BadRequest(new { message = "One of the informed users does not exist." });
 
+        // InvestCase connects investors and startups: an interest must go between the two roles.
+        var roles = new[] { fromUser.Role, toUser.Role };
+        if (!roles.Contains("Investor") || !roles.Contains("Startup"))
+            return BadRequest(new { message = "Interests can only be sent between an Investor and a Startup." });
+
         var existing = await _context.Interests.FirstOrDefaultAsync(x =>
             x.FromUserId == request.FromUserId && x.ToUserId == request.ToUserId);
         if (existing is not null)
