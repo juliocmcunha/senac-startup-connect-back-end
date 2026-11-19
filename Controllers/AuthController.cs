@@ -40,7 +40,7 @@ public class AuthController : ControllerBase
         _context.Users.Add(user);
         _context.Investors.Add(investor);
         await _context.SaveChangesAsync();
-        return Created("", new AuthResponse(user.Id, investor.Id, user.Role, user.FullName, user.Email));
+        return Created($"/api/Users/{user.Id}", new AuthResponse(user.Id, investor.Id, user.Role, user.FullName, user.Email));
     }
 
     /// <summary>Registers a new startup account and startup profile.</summary>
@@ -69,7 +69,7 @@ public class AuthController : ControllerBase
         _context.Users.Add(user);
         _context.Startups.Add(startup);
         await _context.SaveChangesAsync();
-        return Created("", new AuthResponse(user.Id, startup.Id, user.Role, startup.Name, user.Email));
+        return Created($"/api/Users/{user.Id}", new AuthResponse(user.Id, startup.Id, user.Role, startup.Name, user.Email));
     }
 
     /// <summary>Validates email/password and returns the logged-in profile information.</summary>

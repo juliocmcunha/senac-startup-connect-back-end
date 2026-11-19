@@ -1,3 +1,4 @@
+using InvestCase.API.Contracts;
 using InvestCase.API.Data;
 using InvestCase.API.Helpers;
 using InvestCase.Models;
@@ -28,9 +29,10 @@ public class StartupsController : ControllerBase
                 (x.Industry != null && x.Industry.ToLower().Contains(term)) ||
                 (x.Description != null && x.Description.ToLower().Contains(term)));
         }
-        if (!string.IsNullOrWhiteSpace(industry)) query = query.Where(x => x.Industry == industry);
-        if (!string.IsNullOrWhiteSpace(stage)) query = query.Where(x => x.Stage == stage);
-        if (!string.IsNullOrWhiteSpace(location)) query = query.Where(x => x.Location != null && x.Location.Contains(location));
+        // ILike = case-insensitive LIKE in PostgreSQL ("fintech" also finds "Fintech").
+        if (!string.IsNullOrWhiteSpace(industry)) query = query.Where(x => x.Industry != null && EF.Functions.ILike(x.Industry, industry.Trim()));
+        if (!string.IsNullOrWhiteSpace(stage)) query = query.Where(x => x.Stage != null && EF.Functions.ILike(x.Stage, stage.Trim()));
+        if (!string.IsNullOrWhiteSpace(location)) query = query.Where(x => x.Location != null && EF.Functions.ILike(x.Location, $"%{location.Trim()}%"));
 
         Investor? investor = null;
         if (investorUserId.HasValue)
@@ -62,26 +64,40 @@ public class StartupsController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<ActionResult<Startup>> Create(Startup startup)
+    public async Task<ActionResult<Startup>> Create(CreateStartupRequest request)
     {
-        if (!await _context.Users.AnyAsync(x => x.Id == startup.UserId))
+        var user = await _context.Users.FindAsync(request.UserId);
+        if (user is null)
             return BadRequest(new { message = "The informed UserId does not exist." });
-        startup.Id = Guid.NewGuid();
+        if (user.Role != "Startup")
+            return BadRequest(new { message = $"This user is registered as {user.Role}, not Startup." });
+        if (await _context.Startups.AnyAsync(x => x.UserId == request.UserId))
+            return Conflict(new { message = "This user already has a startup profile." });
+
+        var startup = new Startup { Id = Guid.NewGuid(), UserId = request.UserId, ProfileViews30Days = 0 };
+        Apply(startup, new StartupRequest(request.Name, request.Description, request.Stage, request.Industry,
+            request.InvestmentNeededRange, request.WebsiteUrl, request.Location, request.FoundedAt));
         _context.Startups.Add(startup);
         await _context.SaveChangesAsync();
         return CreatedAtAction(nameof(GetById), new { id = startup.Id }, startup);
     }
 
     [HttpPut("{id:guid}")]
-    public async Task<IActionResult> Update(Guid id, Startup input)
+    public async Task<IActionResult> Update(Guid id, StartupRequest input)
     {
         var item = await _context.Startups.FindAsync(id);
         if (item is null) return NotFound(new { message = "Startup not found." });
-        item.Name = input.Name; item.Description = input.Description; item.Stage = input.Stage;
-        item.Industry = input.Industry; item.InvestmentNeededRange = input.InvestmentNeededRange;
-        item.WebsiteUrl = input.WebsiteUrl; item.Location = input.Location; item.FoundedAt = input.FoundedAt;
+        Apply(item, input);
         await _context.SaveChangesAsync();
         return NoContent();
+    }
+
+    private static void Apply(Startup item, StartupRequest input)
+    {
+        item.Name = input.Name.Trim(); item.Description = input.Description; item.Stage = input.Stage;
+        item.Industry = input.Industry; item.InvestmentNeededRange = input.InvestmentNeededRange;
+        item.WebsiteUrl = input.WebsiteUrl; item.Location = input.Location;
+        item.FoundedAt = DateTimeHelper.ToUtc(input.FoundedAt);
     }
 
     [HttpDelete("{id:guid}")]

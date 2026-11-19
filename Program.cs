@@ -50,6 +50,19 @@ public class Program
 
         if (app.Environment.IsDevelopment())
         {
+            // Creates/updates the PostgreSQL tables from the EF Core migrations (Migrations folder).
+            using (var scope = app.Services.CreateScope())
+            {
+                try
+                {
+                    scope.ServiceProvider.GetRequiredService<AppDbContext>().Database.Migrate();
+                }
+                catch (Exception ex)
+                {
+                    app.Logger.LogError(ex, "Could not apply database migrations. Check the connection string and whether PostgreSQL is running.");
+                }
+            }
+
             app.UseSwagger();
             app.UseSwaggerUI();
         }

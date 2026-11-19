@@ -1,3 +1,4 @@
+using InvestCase.API.Contracts;
 using InvestCase.API.Data;
 using InvestCase.API.Helpers;
 using InvestCase.Models;
@@ -29,9 +30,10 @@ public class InvestorsController : ControllerBase
                 (x.Company != null && x.Company.ToLower().Contains(term)) ||
                 (x.InterestArea != null && x.InterestArea.ToLower().Contains(term)));
         }
-        if (!string.IsNullOrWhiteSpace(type)) query = query.Where(x => x.InvestorType == type);
-        if (!string.IsNullOrWhiteSpace(industry)) query = query.Where(x => x.InterestArea != null && x.InterestArea.Contains(industry));
-        if (!string.IsNullOrWhiteSpace(location)) query = query.Where(x => x.Location != null && x.Location.Contains(location));
+        // ILike = case-insensitive LIKE in PostgreSQL ("fintech" also finds "Fintech").
+        if (!string.IsNullOrWhiteSpace(type)) query = query.Where(x => x.InvestorType != null && EF.Functions.ILike(x.InvestorType, type.Trim()));
+        if (!string.IsNullOrWhiteSpace(industry)) query = query.Where(x => x.InterestArea != null && EF.Functions.ILike(x.InterestArea, $"%{industry.Trim()}%"));
+        if (!string.IsNullOrWhiteSpace(location)) query = query.Where(x => x.Location != null && EF.Functions.ILike(x.Location, $"%{location.Trim()}%"));
 
         Startup? startup = null;
         if (startupUserId.HasValue)
@@ -64,27 +66,41 @@ public class InvestorsController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<ActionResult<Investor>> Create(Investor investor)
+    public async Task<ActionResult<Investor>> Create(CreateInvestorRequest request)
     {
-        if (!await _context.Users.AnyAsync(x => x.Id == investor.UserId))
+        var user = await _context.Users.FindAsync(request.UserId);
+        if (user is null)
             return BadRequest(new { message = "The informed UserId does not exist." });
-        investor.Id = Guid.NewGuid();
+        if (user.Role != "Investor")
+            return BadRequest(new { message = $"This user is registered as {user.Role}, not Investor." });
+        if (await _context.Investors.AnyAsync(x => x.UserId == request.UserId))
+            return Conflict(new { message = "This user already has an investor profile." });
+
+        var investor = new Investor { Id = Guid.NewGuid(), UserId = request.UserId };
+        Apply(investor, new InvestorRequest(request.Company, request.JobTitle, request.InvestorType,
+            request.InterestArea, request.InvestmentRange, request.InvestmentThesis,
+            request.LinkedInUrl, request.Description, request.Location));
         _context.Investors.Add(investor);
         await _context.SaveChangesAsync();
         return CreatedAtAction(nameof(GetById), new { id = investor.Id }, investor);
     }
 
     [HttpPut("{id:guid}")]
-    public async Task<IActionResult> Update(Guid id, Investor input)
+    public async Task<IActionResult> Update(Guid id, InvestorRequest input)
     {
         var item = await _context.Investors.FindAsync(id);
         if (item is null) return NotFound(new { message = "Investor not found." });
+        Apply(item, input);
+        await _context.SaveChangesAsync();
+        return NoContent();
+    }
+
+    private static void Apply(Investor item, InvestorRequest input)
+    {
         item.Company = input.Company; item.JobTitle = input.JobTitle; item.InvestorType = input.InvestorType;
         item.InterestArea = input.InterestArea; item.InvestmentRange = input.InvestmentRange;
         item.InvestmentThesis = input.InvestmentThesis; item.LinkedInUrl = input.LinkedInUrl;
         item.Description = input.Description; item.Location = input.Location;
-        await _context.SaveChangesAsync();
-        return NoContent();
     }
 
     [HttpDelete("{id:guid}")]

@@ -1,5 +1,5 @@
+using InvestCase.API.Contracts;
 using InvestCase.API.Data;
-using InvestCase.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -33,11 +33,11 @@ public class UsersController : ControllerBase
     }
 
     [HttpPut("{id:guid}")]
-    public async Task<IActionResult> Update(Guid id, User input)
+    public async Task<IActionResult> Update(Guid id, UpdateUserRequest input)
     {
         var user = await _context.Users.FindAsync(id);
         if (user is null) return NotFound(new { message = "User not found." });
-        user.FullName = input.FullName;
+        user.FullName = input.FullName.Trim();
         user.ProfilePictureUrl = input.ProfilePictureUrl;
         user.Bio = input.Bio;
         user.IsActive = input.IsActive;
