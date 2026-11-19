@@ -389,6 +389,23 @@ Depois: `GET /api/Events`, `PUT /api/Events/{id}` (**204**), `DELETE /api/Events
 ### Passo 9: dashboard do investidor
 `GET /api/Dashboard/investor/INV_USER`: **200**, `recommendedStartups` ordenado por `matchScore`. Usando um ST_USER: **404** `Investor profile not found`.
 
+### Passo 10: chat entre investidor e startup (após o match)
+O chat só funciona entre dois usuários que **têm match**: o servidor confere isso em todas as chamadas. Use INV_USER e ST_USER do passo 8, que já deram match.
+
+1. `POST /api/Messages`
+   ```json
+   { "senderId": "INV_USER", "receiverId": "ST_USER", "content": "Olá! Vamos marcar uma conversa?" }
+   ```
+   - **201**: devolve a mensagem criada (`id`, `content`, `sentAt`, `readAt: null`).
+   - **403**: os dois usuários não têm match. Teste com uma segunda startup que não deu match.
+   - **400**: `content` vazio ou com mais de 2000 caracteres, ou `senderId` igual a `receiverId`.
+2. `GET /api/Messages/ST_USER/with/INV_USER`: **200** com a conversa em ordem cronológica. `isMine` indica se a mensagem foi enviada por quem está consultando (o primeiro id da rota).
+3. `GET /api/Matches/user/ST_USER`: o match traz `lastMessage` e `unreadMessages: 1`.
+4. `GET /api/Notifications/user/ST_USER?type=Mensagens`: *"Nova mensagem de ..."*. Várias mensagens seguidas geram **uma** notificação só, enquanto ela não for lida.
+5. `PATCH /api/Messages/ST_USER/with/INV_USER/read`: **204**. Repita o passo 3: agora `unreadMessages: 0`, e no passo 2 a mensagem aparece com `readAt` preenchido.
+
+**Como funciona:** a tabela `Messages` foi criada pela migration `AddMessages`, que a API aplica sozinha ao iniciar. No front-end, a tela de chat consulta o `GET` da conversa a cada 3 segundos (técnica chamada *polling*), e assim as mensagens novas aparecem sem recarregar a página. Para um projeto acadêmico, o polling é simples e suficiente. A alternativa "em tempo real" seria o SignalR (WebSockets), que é mais complexo.
+
 ### Resumo dos códigos HTTP
 | Código | Significado nesta API |
 |---|---|
@@ -398,6 +415,7 @@ Depois: `GET /api/Events`, `PUT /api/Events/{id}` (**204**), `DELETE /api/Events
 | 400 Bad Request | Dados inválidos (validação ou regra de negócio) |
 | 401 Unauthorized | Login com e-mail/senha incorretos |
 | 404 Not Found | Id não existe (confira `id` x `userId`) |
+| 403 Forbidden | Chat entre usuários sem match |
 | 409 Conflict | Duplicidade (e-mail, perfil, interesse) |
 | 500 | Erro não previsto. Copie o corpo da resposta e investigue |
 | 503 | Banco offline ou esquema desatualizado (Health) |

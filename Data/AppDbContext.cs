@@ -14,6 +14,7 @@ public class AppDbContext : DbContext
     public DbSet<FundingCall> FundingCalls => Set<FundingCall>();
     public DbSet<Interest> Interests => Set<Interest>();
     public DbSet<Notification> Notifications => Set<Notification>();
+    public DbSet<Message> Messages => Set<Message>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -97,6 +98,17 @@ public class AppDbContext : DbContext
             entity.Property(x => x.Type).HasMaxLength(40).IsRequired();
             entity.Property(x => x.Title).HasMaxLength(300).IsRequired();
             entity.HasOne(x => x.User).WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<Message>(entity =>
+        {
+            entity.ToTable("Messages");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Content).HasMaxLength(2000).IsRequired();
+            // Speeds up loading a conversation between two users in chronological order.
+            entity.HasIndex(x => new { x.SenderId, x.ReceiverId, x.SentAt });
+            entity.HasOne(x => x.Sender).WithMany().HasForeignKey(x => x.SenderId).OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(x => x.Receiver).WithMany().HasForeignKey(x => x.ReceiverId).OnDelete(DeleteBehavior.Cascade);
         });
     }
 }
