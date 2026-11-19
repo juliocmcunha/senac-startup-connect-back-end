@@ -36,7 +36,7 @@ public class OpportunitiesController : ControllerBase
             var status = TranslateStatus(interest.Status);
             return new
             {
-                id = interest.Id, name = startup.Name, location = startup.Location ?? "Não informado",
+                id = interest.Id, profileId = startup.Id, userId = startup.UserId, name = startup.Name, location = startup.Location ?? "Não informado",
                 match = $"{score}% compatível", matchType = PresentationHelper.MatchType(score),
                 tags = new[] { startup.Industry ?? "Startup", startup.Stage ?? "Estágio não informado" },
                 status, statusType = StatusType(status)
@@ -69,7 +69,8 @@ public class OpportunitiesController : ControllerBase
             var status = TranslateStatus(interest.Status);
             return new
             {
-                id = interest.Id, initials = PresentationHelper.Initials(investor.User.FullName),
+                id = interest.Id, profileId = investor.Id, userId = investor.UserId,
+                initials = PresentationHelper.Initials(investor.User.FullName),
                 name = investor.User.FullName, type = investor.InvestorType ?? "Investidor",
                 match = $"{score}% compatível", matchType = PresentationHelper.MatchType(score),
                 range = $"Faixa de aporte: {investor.InvestmentRange ?? "Não informado"}",

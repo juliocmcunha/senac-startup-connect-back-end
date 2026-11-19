@@ -30,6 +30,15 @@ Este documento explica o que foi encontrado na análise do back-end, o que foi c
 
 3. Abra **http://localhost:5042/swagger**.
 
+**Dados de demonstração:** com o banco vazio, a API cria automaticamente (só em Development) usuários, startups, eventos e um edital de exemplo (`Data/DbSeeder.cs`). Todas as contas usam a senha `Demo@123`:
+
+| Perfil | E-mails |
+|---|---|
+| Investidor | `rafael@investcase.demo` (login padrão do front), `camila@investcase.demo`, `bruno@investcase.demo` |
+| Startup | `nordestepay@investcase.demo` (login padrão do front), `saudeja@investcase.demo`, `agrosense@investcase.demo`, `edumais@investcase.demo` |
+
+**Rodando junto com o front-end:** no repositório `senac-startup-connect-front-end`, copie `.env.example` para `.env`, rode `npm install` e `npm run dev`, e abra http://localhost:5173. O CORS da API já libera essa origem.
+
 **Ferramenta de migrations (opcional):** o projeto agora tem `dotnet-tools.json`. Para usar comandos `dotnet ef`:
 
 ```bash
