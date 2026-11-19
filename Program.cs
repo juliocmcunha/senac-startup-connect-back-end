@@ -55,11 +55,14 @@ public class Program
             {
                 try
                 {
-                    scope.ServiceProvider.GetRequiredService<AppDbContext>().Database.Migrate();
+                    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                    db.Database.Migrate();
+                    // Demo accounts used by the front-end login screens (only when the database is empty).
+                    DbSeeder.Seed(db);
                 }
                 catch (Exception ex)
                 {
-                    app.Logger.LogError(ex, "Could not apply database migrations. Check the connection string and whether PostgreSQL is running.");
+                    app.Logger.LogError(ex, "Could not apply database migrations or seed data. Check the connection string and whether PostgreSQL is running.");
                 }
             }
 

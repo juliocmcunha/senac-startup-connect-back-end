@@ -42,6 +42,20 @@ public class MatchesController : ControllerBase
             .Where(x => otherUserIds.Contains(x.Id))
             .ToDictionaryAsync(x => x.Id);
 
+        // Profile ids let the front-end open the investor/startup profile screen.
+        var investorProfiles = await _context.Investors.AsNoTracking()
+            .Where(x => otherUserIds.Contains(x.UserId))
+            .ToDictionaryAsync(x => x.UserId, x => x.Id);
+        var startupProfiles = await _context.Startups.AsNoTracking()
+            .Where(x => otherUserIds.Contains(x.UserId))
+            .ToDictionaryAsync(x => x.UserId, x => x.Id);
+
+        // Chat summary: last message and how many messages this user has not read yet.
+        var conversationMessages = await _context.Messages.AsNoTracking()
+            .Where(x => (x.SenderId == userId && otherUserIds.Contains(x.ReceiverId)) ||
+                        (x.ReceiverId == userId && otherUserIds.Contains(x.SenderId)))
+            .ToListAsync();
+
         var result = matches
             .GroupBy(x => x.FromUserId == userId ? x.ToUserId : x.FromUserId)
             .Select(group =>
@@ -52,10 +66,18 @@ public class MatchesController : ControllerBase
                 return new
                 {
                     userId = otherUserId,
+                    profileId = investorProfiles.TryGetValue(otherUserId, out var investorProfileId)
+                        ? investorProfileId
+                        : startupProfiles.TryGetValue(otherUserId, out var startupProfileId) ? startupProfileId : (Guid?)null,
                     displayName = otherUser?.FullName ?? "Unknown user",
                     role = otherUser?.Role,
                     initials = PresentationHelper.Initials(otherUser?.FullName ?? "IC"),
-                    matchedAt = group.Max(x => x.CreatedAt)
+                    matchedAt = group.Max(x => x.CreatedAt),
+                    lastMessage = conversationMessages
+                        .Where(m => m.SenderId == otherUserId || m.ReceiverId == otherUserId)
+                        .OrderByDescending(m => m.SentAt).Select(m => m.Content).FirstOrDefault(),
+                    unreadMessages = conversationMessages
+                        .Count(m => m.SenderId == otherUserId && m.ReadAt == null)
                 };
             })
             .OrderByDescending(x => x.matchedAt)
